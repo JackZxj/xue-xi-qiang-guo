@@ -129,7 +129,7 @@ click(random(300, 800), random(350, 900)); // 打开顶部第一个视频
 toast('视频学习开始！');
 for (var i = 0; i < videoNum; i++) {
     sleep(random(110, 160) * 100); // 看11~16秒
-    swipe(random(300, 800), random(1500, 2000), random(300, 800), random(300, 700), random(300, 700)) // 上滑切换
+    swipe(random(300, 800), random(1600, 2000), random(300, 800), random(300, 700), random(1000, 2000)) // 上滑切换
 }
 
 sleep(((videoTimeInMinute - 1) * 60 + random(1, 59)) * 1000); // 最后一个视频看久一点
