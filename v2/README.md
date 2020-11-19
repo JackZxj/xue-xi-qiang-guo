@@ -3,6 +3,7 @@
 1. 只是模拟点击，封号应该不会（理论上哈，被封别找我！）。
 2. 只限制 android 系统。
 3. 仅用于技术学习与交流，不可用于作弊。
+4. 感谢[Autojs](https://github.com/hyb1996/Auto.js)作者大大提供了这个学习工具！
 
 ## 更新日志
 
@@ -15,7 +16,7 @@
 
 * MI Mix2 (1080*2160) 
 * MIUI 12 (20.6.18)
-* Autojs 4.0.1Beta
+* Autojs ~~4.0.1Beta~~ (由于此版本定时任务有[bug](https://github.com/hyb1996/Auto.js/issues/336)，升级至 [4.1.1Alpha2](https://github.com/Ericwyn/Auto.js/releases)，感谢做包的老哥~ )
 * 学习强国 2.11.1
 
 ### 效果
