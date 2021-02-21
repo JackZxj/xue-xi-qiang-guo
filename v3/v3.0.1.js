@@ -391,10 +391,6 @@ for (var i = 0; i < articleNum; i++) {
         sleep(3000);
         click(random(850, 900), random(2070, 2130)) // 收藏
         sleep(3000);
-        click(random(970, 1020), random(2070, 2130)) // 分享
-        sleep(3000);
-        click(random(880, 1000), random(1320, 1444)) // 分享到短信
-        sleep(3000);
         app.launchApp("学习强国"); // 回到学习强国
         sleep(3000);
     } else if (i != articleNum - 1) {
