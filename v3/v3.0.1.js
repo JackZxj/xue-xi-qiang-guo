@@ -16,15 +16,37 @@ function setInfo(window, str) {
         window.text.setText(str);
     });
 }
+// 间歇性震动n秒
+function vibrateSeconds(n) {
+    if (n < 2.5) {
+        n = 2.5;
+    }
+    for (var i = n/2.5; i > 0; i--) {
+        device.vibrate(500); // 震动0.5秒
+        sleep(2000);
+    }
+}
 // 进入"我的积分"
-function enterMyScore() {
+function enterMyScore(tryCount) {
     sleep(1000);
     id("cn.xuexi.android:id/comm_head_xuexi_score").findOne().click(); // 点击我的积分
-    text("积分规则").waitFor(); // 等待页面刷新
-    sleep(1000);
-
-    swipe(200, 1950, 200, 500, 500); // 上滑
-    sleep(2000);
+    // 等待页面刷新
+    if (text("积分规则").findOne(3000) != null) {
+        sleep(1000);
+        toast("success");
+        swipe(200, 1950, 200, 500, 500); // 上滑
+        sleep(2000);
+    } else {
+        if (tryCount <= 0) {
+            vibrateSeconds(10); // 震动10秒提醒失败
+            alert("无法进入我的积分!");
+            throw SyntaxError(); // 结束脚本
+        } else {
+            back();
+            sleep(2000);
+            enterMyScore(tryCount - 1);
+        }
+    }
 }
 // 长时间等待
 function watchLongTime(timeInMinute, watchType) {
@@ -420,8 +442,8 @@ for (var i = 0; i < articleNum; i++) {
     back(); // 返回学习强国首页
     sleep(3000);
 }
-
-enterMyScore(); // 进入我的积分
+var maxTry=3; // 最大尝试次数
+enterMyScore(maxTry); // 进入我的积分
 var examList = text("去答题").find(); // 获取答题列表
 while (examList.size() > 1) {
     examList[0].click(); // 每日答题
@@ -464,12 +486,15 @@ var scoreToday = scoreTodayText.substring(6, scoreTodayText.length - 2);
 if (40 > scoreToday) {
     setInfo(w, "积分：" + scoreToday);
     // 提醒10秒积分不足
-    for (var i = 4; i > 0; i--) {
-        device.vibrate(500); // 震动0.5秒
-        sleep(2000);
-    }
+    vibrateSeconds(10);
     alert("积分不足!");
 } else {
     toast("完成！");
     device.vibrate(1000); // 震动1秒
+    sleep(1000);
+    // 修改这里 下拉控制栏，然后点击锁屏。或者不要这个也行
+    if (quickSettings()) {
+        sleep(2000);
+        click(180, 1300); // 点击快捷操作栏中的锁屏
+    }
 }
