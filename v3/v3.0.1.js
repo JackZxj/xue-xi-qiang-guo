@@ -31,7 +31,7 @@ function enterMyScore(tryCount) {
     sleep(1000);
     id("cn.xuexi.android:id/comm_head_xuexi_score").findOne().click(); // 点击我的积分
     // 等待页面刷新
-    if (text("积分规则").findOne(3000) != null) {
+    if (text("登录").findOne(3000) != null) {
         sleep(1000);
         toast("success");
         swipe(200, 1950, 200, 500, 500); // 上滑
