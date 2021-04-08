@@ -461,7 +461,7 @@ if (!text("去答题").exists()) {
     // throw SyntaxError(); // 提前结束运行
 } else {
     examList[0].click(); // 每周答题
-    className("android.view.View").text("本月").waitFor(); // 等待页面刷新
+    className("android.view.View").textEndsWith("月").waitFor(); // 等待页面刷新
     answerListQuestions(5, "未作答");
     setInfo(w, "每周答题 OK");
     sleep(random(100, 200) * 10);
