@@ -21,7 +21,7 @@ function vibrateSeconds(n) {
     if (n < 2.5) {
         n = 2.5;
     }
-    for (var i = n/2.5; i > 0; i--) {
+    for (var i = n / 2.5; i > 0; i--) {
         device.vibrate(500); // 震动0.5秒
         sleep(2000);
     }
@@ -386,7 +386,16 @@ sleep(3000);
 // text(city).findOne().parent().parent().click(); // 点击本地
 click(city); // 点击本地
 sleep(3000);
-var tv = textEndsWith('卫视').findOne(); // 点击卫视观看
+var tv = textEndsWith('卫视').findOne(1500); // 查找卫视1.5秒
+if (tv == null) {
+    // 大概在这个位置附近。。如果不行就得按自己的设备更改
+    swipe(600, 600, 100, 600, random(13, 18) * 100); // 左滑
+    tv = textEndsWith('卫视').findOne(2000); // 查找卫视2秒
+    if (tv == null) {
+        setInfo(w, '找不到卫视');
+        tv = textEndsWith('卫视').findOne(); // 查找卫视
+    }
+}
 click(tv.text());
 setInfo(w, '浏览本地频道: ' + tv.text());
 sleep(10000); // 等待10秒
@@ -442,7 +451,7 @@ for (var i = 0; i < articleNum; i++) {
     back(); // 返回学习强国首页
     sleep(3000);
 }
-var maxTry=3; // 最大尝试次数
+var maxTry = 3; // 最大尝试次数
 enterMyScore(maxTry); // 进入我的积分
 var examList = text("去答题").find(); // 获取答题列表
 while (examList.size() > 1) {
