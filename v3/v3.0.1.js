@@ -9,6 +9,8 @@ var articleCommentNum = 3; // 一共需要评论几篇文章
 var articleTimeInMinute = 6; // 文章至少阅读几分钟
 // 修改这里 修改下方的“北京”为自己的城市 或者 修改学习强国中的本地城市为北京
 var city = "北京"; // 当前城市
+var isCheckWeeklyQuestionsOnce = true;      // 是否只检查一次每周答题，true 的话将只检查进入每周答题的第一页，不会一直往下翻到头
+var isCheckSpecialQuestionsOnce = false;    // 是否只检查一次专项答题，true 的话将只检查进入专项答题的第一页，不会一直往下翻到头
 
 // 设置左上角的提示内容
 function setInfo(window, str) {
@@ -180,18 +182,23 @@ function answerQuestions(questionsNum) {
 // 进行每周/专项中没做的答题
 function answerListQuestions(questionsNum, flag) {
     sleep(random(100, 200) * 10);
-    var toDoList = text(flag).find(); // 找到包含flag的列表
-    var noMoreQuestion = false;
-    var endFlag = null;
-    while (toDoList.empty()) { // 找到待答题列表
-        if (endFlag != null) {
+    var toDoList = text(flag).find();   // 找到包含flag的列表
+    var noMoreQuestion = false;         // noMoreQuestion 为 true 时，没有题做了
+    var endFlag = null;                 // endFlag 不为空则说明已经找到头了
+
+    // 答题列表为空时，循环找到待答题列表
+    while (toDoList.empty()) {
+        // 找到头/只检查一次每周答题/只检查一次专项答题 时结束检查
+        if (endFlag != null ||
+            (questionsNum == 5 && isCheckWeeklyQuestionsOnce) ||
+            (questionsNum == 10 && isCheckSpecialQuestionsOnce)) {
             noMoreQuestion = true;
             sleep(random(50, 100) * 10);
             back();
             break;
         }
         swipe(200, 1950, 200, 500, 200); // 上滑
-        sleep(random(100, 200) * 10);
+        sleep(200);
         endFlag = text("您已经看到了我的底线").findOne(1000);
         toDoList = text(flag).find();
     }
@@ -204,6 +211,47 @@ function answerListQuestions(questionsNum, flag) {
         sleep(random(100, 200) * 10);
         back(); // 返回积分列表
     }
+}
+
+// 获取订阅分数
+function subscribe() {
+    var leftToSub = 2;  // 剩余订阅数
+    var sub = className("android.view.View").text("订阅").findOne();
+    sub.parent().parent().child(3).click(); // 进入订阅
+    sleep(1000);
+    var curBar = className("android.view.View").text("上新").findOne(); // 从上新开始找订阅
+    var barTotal = curBar.parent().childCount();
+    for (var curBarIndex = 1; curBarIndex < barTotal; curBarIndex++) {
+        curBar = curBar.parent().child(curBarIndex);
+        // 点击侧边栏
+        if (curBar.click()) {
+            // 只找一次可订阅列表，可能找不齐
+            sleep(1000);
+            var imageViewList = className("android.widget.ImageView").clickable(true).depth(15).find();
+            // 找出可订阅项目，+2是因为一个是图片，一个是+号，都代表同一个订阅
+            for (var i = 0; i < imageViewList.length; i += 2) {
+                imageViewList.get(i).click() // 点击图片进入订阅详情
+                sleep(1000);
+                var status = className("android.widget.TextView").text("订阅").findOne(1500); // 是否已订阅
+                if (status != null) { // 未订阅
+                    sleep(1000);
+                    click(status.bounds().centerX(), status.bounds().centerY()); // 订阅
+                    leftToSub--;  // 剩余订阅数
+                    sleep(1000);
+                }
+                back(); // 返回订阅列表
+                sleep(1000);
+                if (leftToSub == 0) {
+                    back(); // 返回积分列表
+                    sleep(1000);
+                    return 0
+                }
+            }
+        }
+    }
+    back(); // 返回积分列表
+    sleep(1000);
+    return leftToSub
 }
 
 var comment = [
@@ -492,6 +540,14 @@ if ("去看看" == specialQuestions.parent().parent().child(3).text()) { // 专�
 
 var scoreTodayText = className("android.view.View").textStartsWith("今日已累积").findOne().text();
 var scoreToday = scoreTodayText.substring(6, scoreTodayText.length - 2);
+
+// 修改这里 这个if判断是订阅的，不要也可以
+// 如果分数不足40，尝试订阅
+if (40 > scoreToday) {
+    var leftToSub = subscribe();
+    scoreToday += (2 - leftToSub);
+}
+
 if (40 > scoreToday) {
     setInfo(w, "积分：" + scoreToday);
     // 提醒10秒积分不足

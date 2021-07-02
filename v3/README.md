@@ -11,6 +11,12 @@
 
 ## 更新日志
 
+**2021/07/02**
+
+* 热烈庆祝我党成立100周年！祝愿我党万岁！中华民族万岁！
+* 在参数列表中添加了两个检查的开关【`isCheckWeeklyQuestionsOnce` 和 `isCheckSpecialQuestionsOnce`】，解决 [#5](https://github.com/JackZxj/xue-xi-qiang-guo/issues/5)。运行前请自行修改是否开启
+* 添加了如果分数不足40则尝试获取订阅分数的功能
+
 **2021/06/28**
 
 * 修复本地学习可能卡住的问题 [#4](https://github.com/JackZxj/xue-xi-qiang-guo/issues/4)
@@ -104,7 +110,7 @@ v3
 
 * 检查网络环境 (指 wifi) 是否可用
 * 检查是否有没完成的视频/文章分数
-* 获取订阅分数
+* ~~获取订阅分数~~ (update on 2021/07/02)
 * 凑够每日40分
 * 支持移动网络下的自动操作
 * 提升通用性，降低适配难度
