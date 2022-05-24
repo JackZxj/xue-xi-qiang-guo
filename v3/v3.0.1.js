@@ -9,8 +9,9 @@ var articleCommentNum = 3; // 一共需要评论几篇文章
 var articleTimeInMinute = 6; // 文章至少阅读几分钟
 // 修改这里 修改下方的“北京”为自己的城市 或者 修改学习强国中的本地城市为北京
 var city = "北京"; // 当前城市
-var isCheckWeeklyQuestionsOnce = true;      // 是否只检查一次每周答题，true 的话将只检查进入每周答题的第一页，不会一直往下翻到头
-var isCheckSpecialQuestionsOnce = false;    // 是否只检查一次专项答题，true 的话将只检查进入专项答题的第一页，不会一直往下翻到头
+var isCheckSpecialQuestionsOnce = true;    // 是否只检查一次专项答题，true 的话将只检查进入专项答题的第一页，不会一直往下翻到头
+var skipAnswer = false;    // 跳过答题和订阅的部分
+var skipWatch = false;    // 是否跳过视频、文章、本地的部分
 
 // 设置左上角的提示内容
 function setInfo(window, str) {
@@ -150,10 +151,19 @@ function fillBlank(tips) {
     }
     setText(answer);
 }
-// 回答问题，questionsNum为问题数，每日/每周答题为5.专项为10
+// 回答问题，questionsNum为问题数，每日答题为5.专项为10
 function answerQuestions(questionsNum) {
     sleep(1000);
     for (var i = 0; i < questionsNum; i++) {
+        // 如果不小心点到订阅的推送，需要返回，重新进入下一题
+        if (text("查看提示").findOne(2000) == null) {
+            back();
+            sleep(1000);
+            click(1000, 175); // 点击确定
+            sleep(random(50, 100) * 10);
+            click(1000, 175); // 如果错了就再点一下进入下一题
+            sleep(random(50, 100) * 10);
+        }
         text("查看提示").waitFor(); // 阻塞直到页面刷新
         if (textContains("填空题").exists()) {
             sleep(1000);
@@ -179,7 +189,7 @@ function answerQuestions(questionsNum) {
         click(1000, 175); // 如果错了就再点一下进入下一题
     }
 }
-// 进行每周/专项中没做的答题
+// 进行专项中没做的答题
 function answerListQuestions(questionsNum, flag) {
     sleep(random(100, 200) * 10);
     var toDoList = text(flag).find();   // 找到包含flag的列表
@@ -188,9 +198,8 @@ function answerListQuestions(questionsNum, flag) {
 
     // 答题列表为空时，循环找到待答题列表
     while (toDoList.empty()) {
-        // 找到头/只检查一次每周答题/只检查一次专项答题 时结束检查
+        // 找到头/只检查一次专项答题 时结束检查
         if (endFlag != null ||
-            (questionsNum == 5 && isCheckWeeklyQuestionsOnce) ||
             (questionsNum == 10 && isCheckSpecialQuestionsOnce)) {
             noMoreQuestion = true;
             sleep(random(50, 100) * 10);
@@ -203,7 +212,7 @@ function answerListQuestions(questionsNum, flag) {
         toDoList = text(flag).find();
     }
     if (!noMoreQuestion) { // 如果存在未做的题
-        toDoList[0].click();
+        toDoList[toDoList.size() - 1].click();
         sleep(random(100, 200) * 10);
         answerQuestions(questionsNum);
         sleep(random(100, 200) * 10);
@@ -219,33 +228,29 @@ function subscribe() {
     var sub = className("android.view.View").text("订阅").findOne();
     sub.parent().parent().child(3).click(); // 进入订阅
     sleep(1000);
-    var curBar = className("android.view.View").text("上新").findOne(); // 从上新开始找订阅
-    var barTotal = curBar.parent().childCount();
-    for (var curBarIndex = 1; curBarIndex < barTotal; curBarIndex++) {
-        curBar = curBar.parent().child(curBarIndex);
-        // 点击侧边栏
-        if (curBar.click()) {
-            // 只找一次可订阅列表，可能找不齐
+    var curBar = className("android.view.View").text("地方媒体").findOne(); // 从地方媒体开始找订阅
+    // 点击侧边栏
+    if (curBar.click()) {
+        // 只找一次可订阅列表，可能找不齐
+        sleep(1000);
+        var imageViewList = className("android.widget.ImageView").clickable(true).depth(15).find();
+        // 找出可订阅项目，+2是因为一个是图片，一个是+号，都代表同一个订阅
+        for (var i = 0; i < imageViewList.length; i += 2) {
+            imageViewList.get(i).click() // 点击图片进入订阅详情
             sleep(1000);
-            var imageViewList = className("android.widget.ImageView").clickable(true).depth(15).find();
-            // 找出可订阅项目，+2是因为一个是图片，一个是+号，都代表同一个订阅
-            for (var i = 0; i < imageViewList.length; i += 2) {
-                imageViewList.get(i).click() // 点击图片进入订阅详情
+            var status = className("android.widget.TextView").text("订阅").findOne(1500); // 是否已订阅
+            if (status != null) { // 未订阅
                 sleep(1000);
-                var status = className("android.widget.TextView").text("订阅").findOne(1500); // 是否已订阅
-                if (status != null) { // 未订阅
-                    sleep(1000);
-                    click(status.bounds().centerX(), status.bounds().centerY()); // 订阅
-                    leftToSub--;  // 剩余订阅数
-                    sleep(1000);
-                }
-                back(); // 返回订阅列表
+                click(status.bounds().centerX(), status.bounds().centerY()); // 订阅
+                leftToSub--;  // 剩余订阅数
                 sleep(1000);
-                if (leftToSub == 0) {
-                    back(); // 返回积分列表
-                    sleep(1000);
-                    return 0
-                }
+            }
+            back(); // 返回订阅列表
+            sleep(1000);
+            if (leftToSub == 0) {
+                back(); // 返回积分列表
+                sleep(1000);
+                return 0
             }
         }
     }
@@ -370,6 +375,11 @@ var w = floaty.window(
     </frame>
 );
 
+if (skipAnswer && skipWatch) {
+    toast("nothing to do, quit.")
+    exit(); // 结束运行
+}
+
 // 修改这里 (这部分是在锁屏状态下，自动进行解锁的代码。不保证任何UI的设备都能适配，因此需要自己摸索。如果每天手动运行的话，这部分不修改也不影响)
 if (!device.isScreenOn()) { // 如果在息屏状态
     sleep(2000);
@@ -401,104 +411,119 @@ sleep(7000);
 toast('脚本正在运行');
 sleep(3000);
 
-// 修改这里 修改为百灵所在的位置，正常纵坐标位置为屏幕长度-100左右
-click(330, 2080); // 点击百灵
-sleep(3000);
-// 修改这里 修改为百灵所在的位置，正常纵坐标位置为屏幕长度-100左右
-click(330, 2080); // 刷新百灵
-sleep(5000); // 延长至5秒以防网络不太好刷不出来
-click(random(300, 800), random(350, 900)); // 打开顶部第一个视频
-// toast('视频学习开始！');
-setInfo(w, "视频学习开始！")
-
-for (var i = 0; i < videoNum; i++) {
-    setInfo(w, "视频" + (i + 1));
-    sleep(random(130, 180) * 100); // 看13~18秒
-    swipe(random(300, 800), random(1800, 2000), random(300, 800), random(500, 700), random(13, 18) * 100) // 上滑切换
+// 取消新版本体验
+if (text("取消").exists()) {
+    text("取消").click()
+    sleep(3000);
 }
-// 最后一个视频看久一点
-watchLongTime(videoTimeInMinute, "视频");
 
-setInfo(w, '视频学习结束！');
-back();
-sleep(3000);
+if (!skipWatch) {
+    // 修改这里 修改为百灵所在的位置，正常纵坐标位置为屏幕长度-100左右
+    click(330, 2080); // 点击百灵
+    sleep(3000);
+    // 修改这里 修改为百灵所在的位置，正常纵坐标位置为屏幕长度-100左右
+    click(330, 2080); // 刷新百灵
+    sleep(5000); // 延长至5秒以防网络不太好刷不出来
+    // click(random(300, 800), random(350, 900)); // 打开顶部第一个视频
+    className("android.widget.FrameLayout").clickable(true).depth(24).findOne().click() // 点开一个视频
+    // toast('视频学习开始！');
+    setInfo(w, "视频学习开始！")
 
-// 修改这里 修改为“学习”所在的位置，正常纵坐标位置为屏幕长度-100左右
-click(540, 2080); // 点击学习
-sleep(3000);
-// 修改这里 修改为“三”所在的位置，需要根据屏幕dpi进行设置。纵坐标大致在270-300区间附近
-// click(1025, 270); // 展开频道
-click(925, 270); // v2.19 展开频道
-sleep(3000);
-// click(930, 415); // 点击本地
-// text(city).findOne().parent().parent().click(); // 点击本地
-click(city); // 点击本地
-sleep(3000);
-var tv = textEndsWith('卫视').findOne(1500); // 查找卫视1.5秒
-if (tv == null) {
-    // 大概在这个位置附近。。如果不行就得按自己的设备更改
-    swipe(600, 600, 100, 600, random(13, 18) * 100); // 左滑
-    tv = textEndsWith('卫视').findOne(2000); // 查找卫视2秒
+    for (var i = 0; i < videoNum; i++) {
+        setInfo(w, "视频" + (i + 1));
+        sleep(random(130, 180) * 100); // 看13~18秒
+        swipe(random(300, 800), random(1800, 2000), random(300, 800), random(500, 700), random(13, 18) * 100) // 上滑切换
+    }
+    // 最后一个视频看久一点
+    watchLongTime(videoTimeInMinute, "视频");
+
+    setInfo(w, '视频学习结束！');
+    back();
+    sleep(3000);
+
+    // 修改这里 修改为“学习”所在的位置，正常纵坐标位置为屏幕长度-100左右
+    click(540, 2080); // 点击学习
+    sleep(3000);
+    // 修改这里 修改为“三”所在的位置，需要根据屏幕dpi进行设置。纵坐标大致在270-300区间附近
+    // click(1025, 270); // 展开频道
+    click(925, 270); // v2.19 展开频道
+    sleep(3000);
+    // click(930, 415); // 点击本地
+    // text(city).findOne().parent().parent().click(); // 点击本地
+    click(city); // 点击本地
+    sleep(3000);
+    var tv = textEndsWith('卫视').findOne(1500); // 查找卫视1.5秒
+    for (var i = 0; i < 5 && tv == null; i++) {
+        // 大概在这个位置附近。。如果不行就得按自己的设备更改
+        swipe(600, 600, 100, 600, random(13, 18) * 100); // 左滑
+        tv = textEndsWith('卫视').findOne(1000); // 查找卫视1秒
+    }
     if (tv == null) {
         setInfo(w, '找不到卫视');
-        tv = textEndsWith('卫视').findOne(); // 查找卫视
+        tv = textEndsWith('卫视').findOne(); // 查找卫视（阻塞）
+    }
+    click(tv.text());
+    setInfo(w, '浏览本地频道: ' + tv.text());
+    sleep(10000); // 等待10秒
+    back();
+    sleep(3000);
+
+    setInfo(w, '开始学习文章');
+    // 修改这里 修改为“三”所在的位置，需要根据屏幕dpi进行设置。纵坐标大致在270-300区间附近
+    // click(1025, 270); // 展开频道
+    click(925, 270); // v2.19 展开频道
+    sleep(3000);
+    click("订阅"); // 点击订阅
+    sleep(3000);
+
+    for (var i = 0; i < articleNum; i++) {
+        setInfo(w, '正在阅读第' + (i + 1) + '篇文章');
+        sleep(3000);
+        swipe(random(300, 800), random(1500, 2000), random(300, 800), random(500, 1000), random(500, 1000)) // 随机上滑
+        sleep(3000);
+        click(random(1035, 1060), random(500, 700)); // 随机点开 (点击屏幕边缘防止订阅的有视频打断操作)
+        sleep(10 * 1000); // 等待10秒
+        if (!text("欢迎发表你的观点").exists() ||
+            className("android.widget.SeekBar").exists()) { // 如果无法评论或者顶部有视频，则跳过
+            i--;
+            back();
+            continue;
+        }
+        if (i < articleCommentNum) {
+            // 修改这里 修改纵坐标的位置为屏幕长度-60左右
+            click(random(110, 580), random(2070, 2130)); // 点开评论
+            sleep(3000);
+            setText(comment[random(0, comment.length - 1)]); // 评论
+            sleep(3000);
+            click("发布"); // 点击发布
+            sleep(3000);
+            // 修改这里 修改纵坐标的位置为屏幕长度-60左右
+            click(random(850, 900), random(2070, 2130)) // 收藏
+            sleep(3000);
+            // 修改这里 修改纵坐标的位置为屏幕长度-60左右
+            click(random(970, 1020), random(2070, 2130)) // 分享
+            sleep(3000);
+            // 修改这里 具体位置范围可以自行点开文章后点击最有下方的分享，查看分享到短信大致的位置
+            click(random(880, 1000), random(1320, 1444)) // 分享到短信
+            sleep(3000);
+            app.launchApp("学习强国"); // 回到学习强国
+            sleep(3000);
+        } else if (i != articleNum - 1) {
+            sleep(random(50, 100) * 100); // 其他文章阅读15~20秒
+        } else {
+            watchLongTime(articleTimeInMinute, "文章"); // 最后一篇文章阅读久一点
+        }
+        setInfo(w, "文章阅读完成");
+        back(); // 返回学习强国首页
+        sleep(3000);
     }
 }
-click(tv.text());
-setInfo(w, '浏览本地频道: ' + tv.text());
-sleep(10000); // 等待10秒
-back();
-sleep(3000);
 
-setInfo(w, '开始学习文章');
-// 修改这里 修改为“三”所在的位置，需要根据屏幕dpi进行设置。纵坐标大致在270-300区间附近
-// click(1025, 270); // 展开频道
-click(925, 270); // v2.19 展开频道
-sleep(3000);
-click("订阅"); // 点击订阅
-sleep(3000);
-
-for (var i = 0; i < articleNum; i++) {
-    setInfo(w, '正在阅读第' + (i + 1) + '篇文章');
-    sleep(3000);
-    swipe(random(300, 800), random(1500, 2000), random(300, 800), random(500, 1000), random(500, 1000)) // 随机上滑
-    sleep(3000);
-    click(random(1035, 1060), random(500, 700)); // 随机点开 (点击屏幕边缘防止订阅的有视频打断操作)
-    sleep(10 * 1000); // 等待10秒
-    if (!text("欢迎发表你的观点").exists() ||
-        className("android.widget.SeekBar").exists()) { // 如果无法评论或者顶部有视频，则跳过
-        i--;
-        back();
-        continue;
-    }
-    if (i < articleCommentNum) {
-        // 修改这里 修改纵坐标的位置为屏幕长度-60左右
-        click(random(110, 580), random(2070, 2130)); // 点开评论
-        sleep(3000);
-        setText(comment[random(0, comment.length - 1)]); // 评论
-        sleep(3000);
-        click("发布"); // 点击发布
-        sleep(3000);
-        // 修改这里 修改纵坐标的位置为屏幕长度-60左右
-        click(random(850, 900), random(2070, 2130)) // 收藏
-        sleep(3000);
-        // 修改这里 修改纵坐标的位置为屏幕长度-60左右
-        click(random(970, 1020), random(2070, 2130)) // 分享
-        sleep(3000);
-        // 修改这里 具体位置范围可以自行点开文章后点击最有下方的分享，查看分享到短信大致的位置
-        click(random(880, 1000), random(1320, 1444)) // 分享到短信
-        sleep(3000);
-        app.launchApp("学习强国"); // 回到学习强国
-        sleep(3000);
-    } else if (i != articleNum - 1) {
-        sleep(random(50, 100) * 100); // 其他文章阅读15~20秒
-    } else {
-        watchLongTime(articleTimeInMinute, "文章"); // 最后一篇文章阅读久一点
-    }
-    setInfo(w, "文章阅读完成");
-    back(); // 返回学习强国首页
-    sleep(3000);
+if (skipAnswer) {
+    toast("done");
+    exit(); // 结束运行
 }
+
 var maxTry = 3; // 最大尝试次数
 enterMyScore(maxTry); // 进入我的积分
 var examList = text("去答题").find(); // 获取答题列表
@@ -512,18 +537,6 @@ while (examList.size() > 1) {
 }
 setInfo(w, "每日答题 OK");
 sleep(random(100, 200) * 10);
-
-if (!text("去答题").exists()) {
-    toast("未找到每周答题，跳过");
-    // throw SyntaxError(); // 提前结束运行
-} else {
-    examList[0].click(); // 每周答题
-    className("android.view.View").textEndsWith("月").waitFor(); // 等待页面刷新
-    answerListQuestions(5, "未作答");
-    setInfo(w, "每周答题 OK");
-    sleep(random(100, 200) * 10);
-}
-
 
 // 专项答题
 var specialQuestions = className("android.view.View").text("专项答题").findOne();
