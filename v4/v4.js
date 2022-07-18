@@ -670,7 +670,9 @@ function simpleSimilarity(a, b) {
 }
 // 从问题中分割出连续的语句作为关键词
 function getKeywords(question) {
-    var splitters = ["，", "。", "（", "）", "？", "、", " ", "共产党"]; // www.syiban.com 的搜索不支持以上几种符号以及屏蔽了某些关键词
+    var splitters = ["，", "。", "（", "）", "？", "、", " ", "　", "共产党"]; // www.syiban.com 的搜索不支持以上几种符号以及屏蔽了某些关键词
+    question = question.replace(" ", "，").replace(/ /g, "") // 删除 u+00a0 空格, 该空格被作为答案占位符使用
+    question = question.replace(/来源：.*$/g, "") // 删除来源
     var keywords = [question];
     for (splitter of splitters) { // 把问题循环放入上述分隔符进行分割
         console.log("getKeywords:\nsplitter:", splitter, "\nkeywords:", keywords)
@@ -836,9 +838,7 @@ function answerChallenge() {
                     break
                 }
                 sleep(random(1000, 2000))
-                text("分享就能复活").findOne().click() // 如果还不够5题则复活一次，然后继续答题
-                sleep(random(1000, 2000))
-                back()
+                text("立即复活").findOne().click() // 如果还不够5题则复活一次，然后继续答题
                 sleep(random(2000, 3000))
             } else if (text("再来一局").exists()) { // 如果是第二次答错
                 if (enough) { // 分数足够就退出
