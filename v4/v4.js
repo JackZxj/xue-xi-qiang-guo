@@ -715,7 +715,8 @@ function httpAnswer(question, keyword, selections) {
     }
     // qnas: 搜索出来的问题和答案, qs: 搜索到的问题, as: 搜索到的答案, al: 可选答案列表, sl: 可选答案对应的选项结果
     var qnas = null, qs = [], as = [], al = [], sl = [];
-    qnas = html.replace(/\s/g, "").match(/title_color.*?yzm-news-tags/g) // 正则表达式先去除换行符以及空白符，然后匹配出问题答案列表
+    // <div class="yzm-news"><div class="yzm-news-right"> <!-- 内容属性 --><a href="http://www.syiban.com/?search" target="_blank"><span class="title_color">“湖上春来似画图，乱峰围绕水平铺。”出自唐代诗人<span style="color:red;">白居易</span>的《春题湖上》。诗中描写的湖是____。</span></a><p><span style="font-size: 16px; color: #0000FF;">答案：B、西湖</span></p></div></div>
+    qnas = html.replace(/\s/g, "").match(/title_color.*?\/p>/g) // 正则表达式先去除换行符以及空白符，然后匹配出问题答案列表
     console.log("搜索出来的问题和答案:", qnas)
     for (var i = 0; i < qnas.length; i++) {
         var j = qnas[i].match(/title_color.*?<\/a>/) // 切割出问题
