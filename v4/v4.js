@@ -225,8 +225,8 @@ function main() {
 
     // 每日答题
     var everydayQuestions = className("android.view.View").text("每日答题").findOne();
-    while ("去答题" == everydayQuestions.parent().parent().child(3).text()) { // 每日答题还没拿满分
-        everydayQuestions.parent().parent().child(3).click(); // 进入每日答题
+    while ("去答题" == everydayQuestions.parent().child(4).text()) { // 每日答题还没拿满分
+        everydayQuestions.parent().child(4).click(); // 进入每日答题
         answerQuestions(5);
         sleep(random(100, 200) * 10);
         back();
@@ -238,8 +238,8 @@ function main() {
 
     // 专项答题
     var specialQuestions = className("android.view.View").text("专项答题").findOne();
-    if ("去看看" == specialQuestions.parent().parent().child(3).text()) { // 专项答题还没拿满分
-        specialQuestions.parent().parent().child(3).click(); // 进入专项答题
+    if ("去看看" == specialQuestions.parent().child(4).text()) { // 专项答题还没拿满分
+        specialQuestions.parent().child(4).click(); // 进入专项答题
         className("android.view.View").textEndsWith("专项答题").waitFor(); // 等待页面刷新
         answerListQuestions(10, "开始答题"); // 专项答题为 10 或5 道题，函数内会重计算题目数
         setInfo("专项答题 OK");
@@ -638,7 +638,7 @@ function getCurrentScore() {
     scrollUp()
     sleep(500)
     var scoreTodayText = className("android.view.View").textStartsWith("今日已累积").findOne().text();
-    var score = scoreTodayText.substring(6, scoreTodayText.length - 2)
+    var score = scoreTodayText.replace(/[^\d.]/g, "")
     setInfo("当前积分:" + score)
     sleep(500)
     scrollDown()
@@ -807,8 +807,8 @@ function answerChallengeQuestion(enough) {
 // 挑战答题
 function answerChallenge() {
     var challengeQuestions = className("android.view.View").text("挑战答题").findOne();
-    if ("去看看" == challengeQuestions.parent().parent().child(3).text()) { // 挑战答题还没拿满分
-        challengeQuestions.parent().parent().child(3).click(); // 进入挑战答题
+    if ("去看看" == challengeQuestions.parent().child(4).text()) { // 挑战答题还没拿满分
+        challengeQuestions.parent().child(4).click(); // 进入挑战答题
         sleep(5000);
         if (className("android.view.View").depth(24).findOne(1000) == null) { // 如果网络不是很好刷不开挑战答题的界面
             if (id("button1").exists()) { // 如果自动弹窗提示了
@@ -904,8 +904,8 @@ function startFoursomeCompetition() {
 function foursomeCompetition() {
     sleep(random(1000, 2000));
     var foursome = className("android.view.View").text("四人赛").findOne();
-    if ("去看看" == foursome.parent().parent().child(3).text()) { // 四人赛还没完成
-        foursome.parent().parent().child(3).click(); // 进入四人赛
+    if ("去看看" == foursome.parent().child(4).text()) { // 四人赛还没完成
+        foursome.parent().child(4).click(); // 进入四人赛
         startFoursomeCompetition()
     }
     setInfo("四人赛已完成");
@@ -948,8 +948,8 @@ function startPvP() {
 function pvp() {
     sleep(random(1000, 2000));
     var vs = className("android.view.View").text("双人对战").findOne();
-    if ("去看看" == vs.parent().parent().child(3).text()) { // 双人对战还没完成
-        vs.parent().parent().child(3).click(); // 进入双人对战
+    if ("去看看" == vs.parent().child(4).text()) { // 双人对战还没完成
+        vs.parent().child(4).click(); // 进入双人对战
         startPvP()
     }
     setInfo("双人对战已完成");
@@ -959,7 +959,7 @@ function pvp() {
 function subscribe() {
     var leftToSub = 2;  // 剩余订阅数
     var sub = className("android.view.View").text("订阅").findOne();
-    sub.parent().parent().child(3).click(); // 进入订阅
+    sub.parent().child(4).click(); // 进入订阅
     sleep(1000);
     var curBar = className("android.view.View").text("地方媒体").findOne(); // 从地方媒体开始找订阅
     // 点击侧边栏
