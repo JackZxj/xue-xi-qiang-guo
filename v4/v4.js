@@ -89,12 +89,17 @@ function main() {
     app.launchApp("学习强国");
     sleep(7000);
     toast('脚本正在运行');
+    askFrame.close();
     sleep(3000);
 
     // 取消新版本体验
     if (text("取消").exists()) {
         text("取消").click()
         sleep(3000);
+    }
+    if (skipAnswer && skipWatch) {
+        toast("nothing to do, quit.")
+        return // 结束运行
     }
     // 获取视频以及文章的积分
     if (!skipWatch) {
@@ -103,7 +108,11 @@ function main() {
         sleep(3000);
         click(bl.centerX(), bl.centerY()); // 再次点击，刷新百灵
         sleep(5000); // 延长至5秒以防网络不太好刷不出来
-        className("android.widget.FrameLayout").clickable(true).depth(24).findOne().click() // 点开一个视频
+        if (!className("android.widget.FrameLayout").clickable(true).depth(25).exists()) {
+            alert("找不到视频所在的布局，本脚本适配 学习强国 2.43.0，不保证版本兼容性，请安装该版本或者自行修改本条提示所在位置进行适配~");
+            return
+        }
+        className("android.widget.FrameLayout").clickable(true).depth(25).findOne().click() // 点开一个视频
         setInfo("视频学习开始！")
 
         for (var i = 0; i < videoNum; i++) {
@@ -269,13 +278,13 @@ function main() {
             sleep(random(2000, 3000));
         }
 
-        // 下面的订阅逻辑可能有问题，但通常情况下执行到这里都会满40分，所以很少会进行这一步，因此暂时不做修改
-        if (40 > scoreToday) { // 如果分数不足40，尝试订阅
-            var leftToSub = subscribe();
-            scoreToday += (2 - leftToSub);
-            setInfo(scoreToday)
-            sleep(random(2000, 3000));
-        }
+        // TODO: 下面的订阅逻辑可能有问题，但通常情况下执行到这里都会满40分，所以很少会进行这一步，因此暂时不做修改
+        // if (40 > scoreToday) { // 如果分数不足40，尝试订阅
+        //     var leftToSub = subscribe();
+        //     scoreToday += (2 - leftToSub);
+        //     setInfo(scoreToday)
+        //     sleep(random(2000, 3000));
+        // }
 
         back() // 回到学习强国主界面
         sleep(random(1000, 2000));
@@ -310,6 +319,23 @@ var w = floaty.window(
         <text id="text">学习强国！</text>
     </frame>
 );
+var askFrame = floaty.window(
+    <vertical bg="#44ffcc00" paddingTop="20" w="auto">
+        <text id="text">是否跳过部分步骤？不选择则默认不跳过</text>
+        <button id="skipWatch" w="auto" text="跳过视频、阅读" />
+        <button id="skipAnswer" w="auto" text="跳过答题" />
+    </vertical>
+);
+askFrame.skipWatch.click(()=>{
+    skipWatch=true;
+    toast("跳过视频、阅读");
+    askFrame.close();
+});
+askFrame.skipAnswer.click(()=>{
+    skipAnswer=true;
+    toast("跳过答题");
+    askFrame.close();
+});
 
 var comments = [
     "爱迪生：天才是百分之一的勤奋加百分之九十九的汗水。",
@@ -592,8 +618,14 @@ function answerQuestions(questionsNum) {
             sleep(random(100, 200) * 10);
         }
         if (className("android.view.View").text("完成").exists()) {
-            className("android.view.View").text("完成").findOne().click()
-            sleep(random(100, 200) * 10);
+            className("android.view.View").text("完成").findOne().click();
+            sleep(random(300, 500) * 10);
+            if (className("android.view.View").text("访问异常").exists()) {
+                // TODO: 自动处理访问异常，需要手势处理一个滑块
+                vibrateSeconds(3)
+                alert("请点击手动处理“访问异常”");
+                textStartsWith("积分").waitFor();
+            }
         }
     }
 }
