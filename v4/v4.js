@@ -326,13 +326,13 @@ var askFrame = floaty.window(
         <button id="skipAnswer" w="auto" text="跳过答题" />
     </vertical>
 );
-askFrame.skipWatch.click(()=>{
-    skipWatch=true;
+askFrame.skipWatch.click(() => {
+    skipWatch = true;
     toast("跳过视频、阅读");
     askFrame.close();
 });
-askFrame.skipAnswer.click(()=>{
-    skipAnswer=true;
+askFrame.skipAnswer.click(() => {
+    skipAnswer = true;
     toast("跳过答题");
     askFrame.close();
 });
@@ -613,18 +613,32 @@ function answerQuestions(questionsNum) {
         sleep(random(50, 100) * 10);
         click("确定")
         sleep(random(100, 200) * 10);
-        if (className("android.view.View").text("下一题").exists()) {
-            className("android.view.View").text("下一题").findOne().click()
+        var hasNext = className("android.view.View").text("下一题").exists();
+        if (hasNext) {
+            className("android.view.View").text("下一题").findOne().click();
             sleep(random(100, 200) * 10);
         }
         if (className("android.view.View").text("完成").exists()) {
             className("android.view.View").text("完成").findOne().click();
             sleep(random(300, 500) * 10);
+        }
+        if (!hasNext) {
+            sleep(random(300, 500) * 10);
             if (className("android.view.View").text("访问异常").exists()) {
-                // TODO: 自动处理访问异常，需要手势处理一个滑块
-                vibrateSeconds(3)
-                alert("请点击手动处理“访问异常”");
-                textStartsWith("积分").waitFor();
+                setInfo("处理“访问异常”...")
+                var b = className("android.view.View").depth(9).findOne().bounds();
+                swipe(b.left + random(20, 80),          // x1
+                    b.centerY() + random(-30, 30),      // y1
+                    b.right + random(-30, 30),          // x2
+                    b.centerY() + random(-30, 30),      // y2
+                    random(3000, 3500));                // duration
+                sleep(random(300, 500) * 10);
+                if (textStartsWith("积分").findOne(3000) == null) {
+                    vibrateSeconds(10);
+                    alert("请手动处理“访问异常”，然后可以尝试重新执行本脚本");
+                    throw "fail to deal with '访问异常'" // 抛异常
+                }
+                // textStartsWith("积分").waitFor(); // 阻塞直到收到处理完毕
             }
         }
     }
