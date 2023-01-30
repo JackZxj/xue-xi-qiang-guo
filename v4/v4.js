@@ -623,24 +623,27 @@ function answerQuestions(questionsNum) {
             sleep(random(300, 500) * 10);
         }
         if (!hasNext) {
-            sleep(random(300, 500) * 10);
-            if (className("android.view.View").text("访问异常").exists()) {
-                setInfo("处理“访问异常”...")
-                var b = className("android.view.View").depth(9).findOne().bounds();
-                swipe(b.left + random(20, 80),          // x1
-                    b.centerY() + random(-30, 30),      // y1
-                    b.right + random(-30, 30),          // x2
-                    b.centerY() + random(-30, 30),      // y2
-                    random(3000, 3500));                // duration
-                sleep(random(300, 500) * 10);
-                if (textStartsWith("积分").findOne(3000) == null) {
-                    vibrateSeconds(10);
-                    alert("请手动处理“访问异常”，然后可以尝试重新执行本脚本");
-                    throw "fail to deal with '访问异常'" // 抛异常
-                }
-                // textStartsWith("积分").waitFor(); // 阻塞直到收到处理完毕
+            dealWithAccessError();
+            if (textStartsWith("积分").findOne(3000) == null) {
+                vibrateSeconds(10);
+                alert("请手动处理“访问异常”，然后可以尝试重新执行本脚本");
+                throw "fail to deal with '访问异常'" // 抛异常
             }
         }
+    }
+}
+// 处理访问异常
+function dealWithAccessError() {
+    sleep(random(2000, 3000));
+    if (className("android.view.View").text("访问异常").exists()) {
+        setInfo("处理“访问异常”...")
+        var b = className("android.view.View").depth(9).findOne().bounds();
+        swipe(b.left + random(20, 80),          // x1
+            b.centerY() + random(-30, 30),      // y1
+            b.right + random(-30, 30),          // x2
+            b.centerY() + random(-30, 30),      // y2
+            random(3000, 3500));                // duration
+        sleep(random(300, 500) * 10);
     }
 }
 // 进行专项中没做的答题
@@ -856,6 +859,10 @@ function answerChallenge() {
     if ("去看看" == challengeQuestions.parent().child(4).text()) { // 挑战答题还没拿满分
         challengeQuestions.parent().child(4).click(); // 进入挑战答题
         sleep(5000);
+        if (textContains("科普知识").exists()) {
+            click("科普知识");
+            sleep(5000);
+        }
         if (className("android.view.View").depth(24).findOne(1000) == null) { // 如果网络不是很好刷不开挑战答题的界面
             if (id("button1").exists()) { // 如果自动弹窗提示了
                 id("button1").click(); // 点击返回
@@ -864,6 +871,10 @@ function answerChallenge() {
                 back(); // 主动返回
                 sleep(1000);
                 text("退出").click(); // 提示是否要退出，点击确认退出
+                sleep(1000);
+                if (textContains("科普知识").exists()) {
+                    back();
+                }
             }
             answerChallenge() // 重新进行挑战答题
             return
@@ -907,6 +918,10 @@ function answerChallenge() {
             sleep(random(1000, 2000))
         }
     }
+    sleep(1000);
+    if (textContains("科普知识").exists()) {
+        back();
+    }
     setInfo("挑战答题已完成");
     sleep(random(1000, 2000));
 }
@@ -915,6 +930,7 @@ function startFoursomeCompetition() {
     text("开始比赛").waitFor() // 等待界面刷新
     sleep(random(2000, 3000))
     text("开始比赛").findOne().click() // 开始比赛
+    dealWithAccessError();
     className("android.view.View").text("100").waitFor() // 等待比赛界面刷新
     while (true) {
         if (className("android.widget.RadioButton").findOne(5000) != null) { // 等待选项出现，如果选项出现了说明还没结束
@@ -962,6 +978,7 @@ function startPvP() {
     var pp = className("android.view.View").text("随机匹配").findOne(); // 等待界面刷新
     sleep(random(1000, 2000));
     pp.parent().child(0).click(); // 开始随机匹配
+    dealWithAccessError();
     sleep(random(5000, 7000)); // 等待随机匹配
     while (true) {
         if (className("android.widget.RadioButton").findOne(5000) != null) { // 等待选项出现，如果选项出现了说明还没结束
