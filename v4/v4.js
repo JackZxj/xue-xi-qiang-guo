@@ -623,11 +623,12 @@ function answerQuestions(questionsNum) {
             sleep(random(300, 500) * 10);
         }
         if (!hasNext) {
-            dealWithAccessError();
-            if (textStartsWith("积分").findOne(3000) == null) {
-                vibrateSeconds(10);
-                alert("请手动处理“访问异常”，然后可以尝试重新执行本脚本");
-                throw "fail to deal with '访问异常'" // 抛异常
+            if (dealWithAccessError()) {
+                if (textStartsWith("积分").findOne(3000) == null) {
+                    vibrateSeconds(10);
+                    alert("请手动处理“访问异常”，然后可以尝试重新执行本脚本");
+                    throw "fail to deal with '访问异常'" // 抛异常
+                }
             }
         }
     }
@@ -641,10 +642,12 @@ function dealWithAccessError() {
         swipe(b.left + random(20, 80),          // x1
             b.centerY() + random(-30, 30),      // y1
             b.right + random(-30, 30),          // x2
-            b.centerY() + random(-30, 30),      // y2
-            random(3000, 3500));                // duration
+            b.centerY() + random(-20, 20),      // y2
+            random(3100, 3500));                // duration
         sleep(random(300, 500) * 10);
+        return true
     }
+    return false
 }
 // 进行专项中没做的答题
 function answerListQuestions(questionsNum, flag) {
